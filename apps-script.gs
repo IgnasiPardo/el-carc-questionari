@@ -44,7 +44,7 @@ function score_(value, max) {
 }
 
 function verifyPayload_(data) {
-  if(!data || data.version !== '4' || typeof data.submissionId !== 'string' ||
+  if(!data || !['4','5'].includes(data.version) || typeof data.submissionId !== 'string' ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.submissionId)) throw new Error('Enviament no vàlid');
   if(typeof data.participant !== 'string' || !data.participant.trim()) throw new Error('Falta el nom');
   if(!Array.isArray(data.answers) || data.answers.length!==AXIS_COUNTS.length) throw new Error('Eixos incomplets');
@@ -55,7 +55,7 @@ function verifyPayload_(data) {
     a.attention.forEach(v=>values.push(score_(v,3)));
   });
   if(values.length!==66) throw new Error('Valoracions incompletes');
-  return {id:data.submissionId,participant:cleanText_(data.participant.trim(),200),values,notes:cleanText_(data.notes||'',10000)};
+  return {version:data.version,id:data.submissionId,participant:cleanText_(data.participant.trim(),200),values,notes:cleanText_(data.notes||'',10000)};
 }
 
 function doPost(e) {
@@ -80,7 +80,7 @@ function doPost(e) {
       if(match[4]!==soci) throw new Error('Identificador no vàlid');
       return page_('Han quedat desades les teves respostes.');
     }
-    const row=[data.id,new Date(),data.participant,'4',soci,...data.values,data.notes];
+    const row=[data.id,new Date(),data.participant,data.version,soci,...data.values,data.notes];
     const dest=last+1;
     sheet.getRange(dest,1,1,row.length).setValues([row]);
     SpreadsheetApp.flush();
